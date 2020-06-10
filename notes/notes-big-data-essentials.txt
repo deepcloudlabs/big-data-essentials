@@ -1,5 +1,5 @@
-WINDOWS:
-=========
+Setting Hadoop Environment Variables in Windows:
+================================================
 set JAVA_HOME=c:\stage\opt\jdk1.8.0_181
 set PATH=%JAVA_HOME%\bin;%PATH%
 set HADOOP_HOME=c:\stage\opt\hadoop-3.1.2
@@ -10,44 +10,54 @@ set HADOOP_HDFS_HOME=c:\stage\opt\hadoop-3.1.2
 set HADOOP_YARN_HOME=c:\stage\opt\hadoop-3.1.2
 set PATH=%HADOOP_HOME%\bin;%HADOOP_HOME%\sbin;%PATH%
 
+Setting Hadoop Environment Variables in Linux:
+================================================
+export JAVA_HOME=/usr/java/jdk1.8.0_152
+export PATH=$JAVA_HOME/bin:$PATH
+export HADOOP_HOME=/home/guru/hadoop-2.8.2
+export HADOOP_CONF_DIR=/home/guru/hadoop-2.8.2/etc/hadoop
+export HADOOP_MAPRED_HOME=/home/guru/hadoop-2.8.2
+export HADOOP_COMMON_HOME=/home/guru/hadoop-2.8.2
+export HADOOP_HDFS_HOME=/home/guru/hadoop-2.8.2
+export HADOOP_YARN_HOME=/home/guru/hadoop-2.8.2
+export HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_HOME/lib/native
+export HADOOP_OPTS="-Djava.library.path=$HADOOP_HOME/lib/native"
+export HADOOP_PID_DIR=/home/guru/hadoop-2.8.2/data/hdfs/pid
+export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin
 
+File operations in HDFS:
+========================
 >> create command prompt in windows as administrator: Windows + R -> cmd
- 
-set PATH=c:\stage\opt\hadoop-3.0.3\bin;c:\stage\opt\hadoop-3.0.3\sbin;%PATH%
+
 start-dfs
+start-yarn
+
 hadoop fs -mkdir /users
 hadoop fs -mkdir -p /users/student
 hadoop fs -put words-sample.txt /users/student
 hadoop fs -ls /users/student
 hadoop fs -rm -r /users
-start-yarn
 
 >> formatting hadoop fs
 close all the nodes and then run the following command:
-hadoop namenode -format
 hdfs namenode -format
 
-======================================================
-HADOOP INSTALLATION ON CENTOS 7 
-======================================================
-ssh-keygen
-cp .ssh/id_rsa.pub .ssh/authorized_keys
-ssh localhost time
-ssh start-dfs.sh
+
+Running MapReduce Jobs in Hadoop:
+=================================
 
 Example #1:
 -----------
 
 > hadoop jar word-count.jar com.example.WordCount /users/student/war-and-peace.txt /users/student/output
-
 > hadoop fs -cat /users/student/output/*
 
 Example #2:
 -----------
 
 > hadoop jar word-count.jar com.example.GetContinentCountries /users/student/world.csv /users/student/output
-
 > hadoop fs -cat /users/student/output/*
+
 Africa  58
 Antarctica      5
 Asia    52
@@ -76,3 +86,51 @@ Example #4:
 
 > hadoop fs -cat /users/student/output/*
 continents      Africa,Antarctica,Asia,Europe,North America,Oceania,South America
+
+Monitoring Hadoop:
+==================
+YARN Manager:
+  http://localhost:8088/cluster
+HDFS Manager: 
+  http://localhost:9870/
+
+Apache Hive:
+============
+create table countries (
+    code string,
+    name string,
+    continent string,
+    region string,
+    surfaceArea float,
+    indepYear int,
+    population int,
+    lifeExpectancy float,
+    gnp float,
+    gnpOld float,
+    localName string,
+    govermentForm string,
+    headOfState string,
+    capital int,
+    code2 string) 
+    row format delimited
+    fields terminated by ','
+    lines terminated by '\n'
+    stored as textfile;
+	
+create table cities (id int, name string,
+    countryCode string,
+    district string,
+    population int )
+    row format delimited
+    fields terminated by ','
+    lines terminated by '\n'
+    stored as textfile;	
+	
+load data local inpath '/home/guru/samples/cities2.csv' overwrite into table cities;	
+load data local inpath '/home/guru/samples/countries2.csv' overwrite into table countries;	
+load data local inpath '/home/guru/samples/countries2.csv' overwrite into table countries;	
+
+hive> select sum(population) from cities where countrycode="TUR";
+hive> select distinct(continent) from countries;
+hive> select continent , sum(population) from countries group by continent;
+hive> select ci.name, co.population from countries co , cities ci where ci.id=co.capital;
